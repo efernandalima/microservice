@@ -35,7 +35,7 @@ public class PedidoService {
             throw new IllegalArgumentException("Quantidade deve ser maior que zero");
         }
 
-        // Validação de usuário (simulada - em produção faria chamada ao
+        // Validação de usuário
         // servico-usuario)
         if (request.getUsuarioId() == null || request.getUsuarioId() <= 0) {
             throw new IllegalArgumentException("ID de usuário inválido");
