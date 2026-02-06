@@ -1,8 +1,11 @@
-# Microserviços Lab - Java/Spring Boot
 
-Projeto completo de microserviços com Java 21, Spring Boot 3.x, observabilidade e segurança.
 
-## 📋 Visão Geral
+# Microservices  – Java 21 & Spring Boot 3
+![Java](https://img.shields.io/badge/Java-21-red)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen)
+![Docker](https://img.shields.io/badge/Docker-Compose-blue)
+
+##  Visão Geral
 
 Este projeto demonstra uma arquitetura de microserviços moderna com:
 - **2 Microserviços**: Serviço de Usuário (8081) e Serviço de Pedidos (8082)
@@ -15,7 +18,7 @@ Este projeto demonstra uma arquitetura de microserviços moderna com:
 - **Documentação API**: Swagger/OpenAPI
 - **Testes Unitários**: 14 testes com JUnit 5 e Mockito
 
-## 🏗️ Arquitetura
+## Arquitetura
 
 ```
 ┌─────────────────┐     ┌─────────────────┐
@@ -38,24 +41,25 @@ Este projeto demonstra uma arquitetura de microserviços moderna com:
     │  Stack  │            │ + OTel  │
     └─────────┘            └─────────┘
 ```
+##  Tecnologias
 
-## 🚀 Tecnologias
+**Backend**
+- Java 21, Spring Boot 3.2.2
+- Spring Security, JWT
+- JPA/Hibernate, Flyway
 
-- **Java 21**
-- **Spring Boot 3.2.2**
-- **PostgreSQL 16** - Dados relacionais
-- **Redis 7** - Cache
-- **MongoDB 7** - Eventos/Auditoria
-- **Elasticsearch 8.11** - Armazenamento de logs
-- **Kibana 8.11** - Visualização de logs
-- **Logstash 8.11** - Pipeline de logs
-- **Jaeger 1.52** - Distributed tracing
-- **OpenTelemetry** - Observabilidade
-- **Flyway** - Migrations de banco
-- **Swagger/OpenAPI** - Documentação de API
-- **Docker & Docker Compose** - Containerização
+**Infra & Observabilidade**
+- Docker, Docker Compose
+- PostgreSQL, Redis, MongoDB
+- ELK Stack (Elasticsearch, Logstash, Kibana)
+- Jaeger + OpenTelemetry
 
-## 📦 Pré-requisitos
+**Qualidade**
+- JUnit 5, Mockito
+- Swagger/OpenAPI
+
+
+##  Pré-requisitos
 
 - **Docker** e **Docker Compose**
 - **Java 21** (para desenvolvimento local)
@@ -65,11 +69,15 @@ Este projeto demonstra uma arquitetura de microserviços moderna com:
 
 ### 1. Clone o repositório
 ```bash
-cd c:\Users\Fer\Desktop\microservice
+
+git clone https://github.com/efernandalima/microservice.git
+cd microservice
+
 ```
 
 ### 2. Inicie toda a infraestrutura
 ```bash
+
 cd infra
 docker-compose up -d
 ```
@@ -91,6 +99,7 @@ docker-compose ps
 ```
 
 ### 4. Verifique health dos serviços
+
 ```bash
 curl http://localhost:8081/health
 curl http://localhost:8082/health
@@ -112,7 +121,7 @@ mvn spring-boot:run -pl servico-usuario
 mvn spring-boot:run -pl servico-pedido
 ```
 
-## 📚 Documentação da API
+##  Documentação da API
 
 ### Swagger UI
 - **Serviço de Usuário**: http://localhost:8081/swagger-ui.html
@@ -122,7 +131,7 @@ mvn spring-boot:run -pl servico-pedido
 - **Serviço de Usuário**: http://localhost:8081/api-docs
 - **Serviço de Pedidos**: http://localhost:8082/api-docs
 
-## 🔐 Segurança - Criptografia
+##  Segurança - Criptografia
 
 Os campos sensíveis (CPF, email, telefone) são criptografados usando **AES-256-GCM** antes de serem salvos no banco de dados.
 
@@ -146,7 +155,7 @@ environment:
   - ENCRYPTION_KEY=sua_chave_aqui
 ```
 
-## 🧪 Testando a API
+##  Testando a API
 
 ### Criar Usuário
 ```bash
@@ -200,7 +209,7 @@ curl -X POST http://localhost:8081/api/usuarios \
 # }
 ```
 
-## 📊 Observabilidade
+##  Observabilidade
 
 ### Logs no Kibana
 1. Acesse: http://localhost:5601
@@ -236,6 +245,13 @@ SELECT id, nome, cpf, email FROM usuarios;
 
 Os campos `cpf`, `email` e `telefone` aparecerão como strings Base64 criptografadas.
 
+**Endpoints Principais:**
+- Serviço Usuário: http://localhost:8081
+- Serviço Pedidos: http://localhost:8082
+- Kibana: http://localhost:5601
+- Jaeger: http://localhost:16686
+
+
 ## 🛠️ Comandos Úteis
 
 ### Parar todos os serviços
@@ -260,7 +276,7 @@ docker-compose up -d --build servico-usuario
 docker-compose down -v
 ```
 
-## 📁 Estrutura do Projeto
+##  Estrutura do Projeto
 
 ```
 microservice/
@@ -293,7 +309,7 @@ microservice/
         └── otel-collector.yaml
 ```
 
-## ✨ Componentes de Qualidade
+##  Componentes de Qualidade
 
 ### GlobalExceptionHandler
 Cada serviço possui um handler global que captura exceções e retorna respostas JSON estruturadas:
@@ -307,7 +323,7 @@ Configuração customizada do Redis cache com:
 - TTL de 10 minutos por padrão
 - Não cacheia valores nulos
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Serviços não iniciam
 ```bash
@@ -332,19 +348,21 @@ docker-compose restart servico-usuario servico-pedido
 # Aumentar vm.max_map_count (Linux/WSL)
 sudo sysctl -w vm.max_map_count=262144
 ```
+##  Principais Aprendizados
 
-## 📝 Licença
+- Comunicação entre microserviços
+- Segurança com JWT
+- Cache com Redis
+- Observabilidade com logs e tracing
+- Tratamento global de exceções
+- Boas práticas de arquitetura backend
 
-Este projeto é um exemplo educacional para demonstração de arquitetura de microserviços.
+##  Licença
 
-## 👨‍💻 Autor
+Este projeto é de caráter educacional e demonstrativo, criado para fins de estudo e portfólio.
 
-Desenvolvido como projeto de demonstração técnica.
+##  Autor
+Desenvolvido por Fernanda Lima como projeto de estudo e portfólio em arquitetura de microserviços.
+
 
 ---
-
-**Endpoints Principais:**
-- Serviço Usuário: http://localhost:8081
-- Serviço Pedidos: http://localhost:8082
-- Kibana: http://localhost:5601
-- Jaeger: http://localhost:16686
