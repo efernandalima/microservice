@@ -1,0 +1,88 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: servico-usuario
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/usuariodb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+    
+    mongodb:
+      uri: mongodb://localhost:27017/events
+      database: events
+  
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+
+# OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# Encryption
+encryption:
+  key: ${ENCRYPTION_KEY:ENCRYPTION_KEY_PLACEHOLDER}
+
+# OpenTelemetry
+otel:
+  service:
+    name: servico-usuario
+  exporter:
+    otlp:
+      endpoint: http://localhost:4318
+  traces:
+    exporter: otlp
+  metrics:
+    exporter: none
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:JWT_SECRET_PLACEHOLDER}
+  expiration: 86400000  # 24 hours in milliseconds
+
+# Logging
+logging:
+  level:
+    root: INFO
+    lab.microservices: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
