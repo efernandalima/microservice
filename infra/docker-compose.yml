@@ -1,0 +1,202 @@
+version: '3.8'
+
+services:
+  # PostgreSQL - Bancos de dados relacionais
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_MULTIPLE_DATABASES: usuariodb,pedidodb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-multiple-dbs.sh:/docker-entrypoint-initdb.d/init-multiple-dbs.sh
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB - Eventos/Auditoria
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Elasticsearch - Armazenamento de logs
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kibana - Visualização de logs
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Logstash - Pipeline de logs
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: logstash
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+    depends_on:
+      - elasticsearch
+    networks:
+      - microservices-network
+    environment:
+      - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
+
+  # Jaeger - Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    networks:
+      - microservices-network
+
+  # OpenTelemetry Collector
+  otel-collector:
+    image: otel/opentelemetry-collector:0.91.0
+    container_name: otel-collector
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./otel/otel-collector.yaml:/etc/otel-collector.yaml
+    ports:
+      - "4319:4318"    # OTLP HTTP
+    depends_on:
+      - jaeger
+    networks:
+      - microservices-network
+
+  # Serviço de Usuário
+  servico-usuario:
+    build:
+      context: ..
+      dockerfile: servico-usuario/Dockerfile
+    container_name: servico-usuario
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/usuariodb
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/events
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - ENCRYPTION_KEY=ENCRYPTION_KEY_PLACEHOLDER
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      logstash:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+  # Serviço de Pedidos
+  servico-pedido:
+    build:
+      context: ..
+      dockerfile: servico-pedido/Dockerfile
+    container_name: servico-pedido
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/pedidodb
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/events
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      logstash:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    networks:
+      - microservices-network
+    restart: unless-stopped
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  mongodb_data:
+  elasticsearch_data:
