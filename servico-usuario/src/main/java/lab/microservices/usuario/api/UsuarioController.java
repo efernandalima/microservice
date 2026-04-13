@@ -60,4 +60,16 @@ public class UsuarioController {
         usuarioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Endpoint interno para verificação de existência de usuário.
+     * Consumido pelo servico-pedido via OpenFeign para validar se o usuário existe
+     * antes de criar um pedido, garantindo integridade entre os microsserviços.
+     */
+    @GetMapping("/{id}/existe")
+    @Operation(summary = "Verificar se usuário existe", description = "Endpoint interno para comunicação entre microsserviços")
+    public ResponseEntity<Boolean> existe(@PathVariable Long id) {
+        boolean existe = usuarioService.existe(id);
+        return ResponseEntity.ok(existe);
+    }
 }

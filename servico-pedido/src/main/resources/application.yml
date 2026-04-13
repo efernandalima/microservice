@@ -48,6 +48,15 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
 
+# JWT Configuration (mesma chave secreta do servico-usuario)
+jwt:
+  secret: ${JWT_SECRET:JWT_SECRET_PLACEHOLDER}
+
+# Comunicação entre microsserviços (OpenFeign)
+services:
+  usuario:
+    url: ${SERVICO_USUARIO_URL:http://localhost:8081}
+
 # OpenTelemetry
 otel:
   service:

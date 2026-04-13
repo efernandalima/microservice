@@ -122,6 +122,11 @@ public class UsuarioService {
         log.info("Usuário deletado: {}", id);
     }
 
+    @Transactional(readOnly = true)
+    public boolean existe(Long id) {
+        return usuarioRepository.existsById(id);
+    }
+
     private UsuarioResponse toResponse(Usuario usuario) {
         UsuarioResponse response = new UsuarioResponse();
         response.setId(usuario.getId());

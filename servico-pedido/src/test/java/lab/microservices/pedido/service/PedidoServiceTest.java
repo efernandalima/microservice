@@ -35,6 +35,9 @@ class PedidoServiceTest {
     @Mock
     private PedidoEventPublisher eventPublisher;
 
+    @Mock
+    private lab.microservices.pedido.client.UsuarioClient usuarioClient;
+
     @InjectMocks
     private PedidoService pedidoService;
 
@@ -65,6 +68,7 @@ class PedidoServiceTest {
     @DisplayName("Deve criar pedido com sucesso")
     void deveCriarPedidoComSucesso() {
         // Given
+        when(usuarioClient.usuarioExiste(1L)).thenReturn(true);
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
         // When

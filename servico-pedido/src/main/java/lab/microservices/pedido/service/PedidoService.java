@@ -2,6 +2,7 @@ package lab.microservices.pedido.service;
 
 import lab.microservices.pedido.api.dto.PedidoRequest;
 import lab.microservices.pedido.api.dto.PedidoResponse;
+import lab.microservices.pedido.client.UsuarioClient;
 import lab.microservices.pedido.domain.Pedido;
 import lab.microservices.pedido.events.PedidoEventPublisher;
 import lab.microservices.pedido.repo.PedidoRepository;
@@ -25,6 +26,7 @@ public class PedidoService {
 
     private final PedidoRepository pedidoRepository;
     private final PedidoEventPublisher eventPublisher;
+    private final UsuarioClient usuarioClient;
 
     @Transactional
     public PedidoResponse criar(PedidoRequest request) {
@@ -35,10 +37,23 @@ public class PedidoService {
             throw new IllegalArgumentException("Quantidade deve ser maior que zero");
         }
 
-        // Validação de usuário
-        // servico-usuario)
+        // Validação de usuário via OpenFeign (comunicação entre microsserviços)
         if (request.getUsuarioId() == null || request.getUsuarioId() <= 0) {
             throw new IllegalArgumentException("ID de usuário inválido");
+        }
+
+        try {
+            Boolean existe = usuarioClient.usuarioExiste(request.getUsuarioId());
+            if (Boolean.FALSE.equals(existe)) {
+                throw new IllegalArgumentException(
+                    "Usuário com ID " + request.getUsuarioId() + " não encontrado. Não é possível criar o pedido.");
+            }
+        } catch (IllegalArgumentException e) {
+            throw e; // Re-lança validações de negócio
+        } catch (Exception e) {
+            log.error("Falha ao consultar servico-usuario para ID {}: {}", request.getUsuarioId(), e.getMessage());
+            throw new IllegalStateException(
+                "Não foi possível validar o usuário. O serviço de usuários está indisponível.");
         }
 
         // Cria entidade

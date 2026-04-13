@@ -4,19 +4,22 @@
 ![Java](https://img.shields.io/badge/Java-21-red)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen)
 ![Docker](https://img.shields.io/badge/Docker-Compose-blue)
+![CI](https://github.com/efernandalima/microservice/actions/workflows/maven.yml/badge.svg)
 
 ##  Visão Geral
 
 Este projeto demonstra uma arquitetura de microserviços moderna com:
 - **2 Microserviços**: Serviço de Usuário (8081) e Serviço de Pedidos (8082)
-- **Autenticação JWT**: Spring Security + JWT para proteção das APIs
+- **Autentiçação JWT**: Spring Security + JWT para proteção dos endpoints de ambos os serviços
+- **Comunicação entre Serviços**: OpenFeign para validação síncrona de usuários ao criar pedidos
 - **Criptografia AES-256-GCM**: Dados sensíveis criptografados
 - **Cache Redis**: Performance otimizada com serialização LocalDateTime
 - **Eventos MongoDB**: Auditoria completa
 - **GlobalExceptionHandler**: Tratamento de erros estruturado (JSON)
 - **Logs estruturados**: Logback + Logstash (ELK Stack)
 - **Documentação API**: Swagger/OpenAPI
-- **Testes Unitários**: 14 testes com JUnit 5 e Mockito
+- **CI/CD**: GitHub Actions com build e testes automatizados
+- **Testes Unitários**: JUnit 5 e Mockito
 
 ## Arquitetura
 
@@ -45,7 +48,8 @@ Este projeto demonstra uma arquitetura de microserviços moderna com:
 
 **Backend**
 - Java 21, Spring Boot 3.2.2
-- Spring Security, JWT
+- Spring Security, JWT (JJWT 0.12.3)
+- Spring Cloud OpenFeign (comunicação entre serviços)
 - JPA/Hibernate, Flyway
 
 **Infra & Observabilidade**
@@ -53,6 +57,9 @@ Este projeto demonstra uma arquitetura de microserviços moderna com:
 - PostgreSQL, Redis, MongoDB
 - ELK Stack (Elasticsearch, Logstash, Kibana)
 - Jaeger + OpenTelemetry
+
+**DevOps**
+- GitHub Actions (CI/CD)
 
 **Qualidade**
 - JUnit 5, Mockito
@@ -157,10 +164,31 @@ environment:
 
 ##  Testando a API
 
-### Criar Usuário
+### 1. Registrar um Usuário de Autentiçação (obter token)
 ```bash
+curl -X POST http://localhost:8081/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "joao",
+    "email": "joao@example.com",
+    "password": "senha123"
+  }'
+# Resposta: { "accessToken": "eyJ...", "tokenType": "Bearer", ... }
+```
+
+### 2. Login (obter token JWT)
+```bash
+curl -X POST http://localhost:8081/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "joao", "password": "senha123"}'
+```
+
+### 3. Criar Usuário de Domínio
+```bash
+TOKEN="seu_token_jwt_aqui"
 curl -X POST http://localhost:8081/api/usuarios \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "nome": "João da Silva",
     "cpf": "12345678901",
@@ -169,15 +197,11 @@ curl -X POST http://localhost:8081/api/usuarios \
   }'
 ```
 
-### Listar Usuários
-```bash
-curl http://localhost:8081/api/usuarios
-```
-
-### Criar Pedido
+### 4. Criar Pedido (validação automática do usuário via Feign)
 ```bash
 curl -X POST http://localhost:8082/api/pedidos \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{
     "usuarioId": 1,
     "nomeProduto": "Notebook Dell",
@@ -185,11 +209,9 @@ curl -X POST http://localhost:8082/api/pedidos \
     "precoTotal": 2500.00,
     "status": "PENDENTE"
   }'
-```
-
-### Listar Pedidos
-```bash
-curl http://localhost:8082/api/pedidos
+# O servico-pedido consulta automaticamente o servico-usuario
+# para validar se o usuarioId existe antes de criar o pedido.
+# Se o usuario nao existir, retorna 400 Bad Request.
 ```
 
 ### Testar tratamento de erro (GlobalExceptionHandler)
