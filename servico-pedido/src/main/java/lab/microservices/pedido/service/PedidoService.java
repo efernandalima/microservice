@@ -5,7 +5,7 @@ import lab.microservices.pedido.api.dto.PedidoResponse;
 import lab.microservices.pedido.client.UsuarioClient;
 import lab.microservices.pedido.domain.Pedido;
 import lab.microservices.pedido.events.PedidoEventPublisher;
-import lab.microservices.pedido.repo.PedidoRepository;
+import lab.microservices.pedido.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;

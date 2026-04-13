@@ -307,7 +307,7 @@ microservice/
 │   ├── src/main/java/
 │   │   └── lab/microservices/usuario/
 │   │       ├── domain/              # Entidades JPA
-│   │       ├── repo/                # Repositories
+│   │       ├── repository/          # Repositories
 │   │       ├── service/             # Lógica de negócio
 │   │       ├── api/                 # Controllers REST
 │   │       │   └── dto/             # DTOs

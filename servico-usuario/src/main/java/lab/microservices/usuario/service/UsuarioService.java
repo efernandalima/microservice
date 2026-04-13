@@ -4,7 +4,7 @@ import lab.microservices.usuario.api.dto.UsuarioRequest;
 import lab.microservices.usuario.api.dto.UsuarioResponse;
 import lab.microservices.usuario.domain.Usuario;
 import lab.microservices.usuario.events.UsuarioEventPublisher;
-import lab.microservices.usuario.repo.UsuarioRepository;
+import lab.microservices.usuario.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;

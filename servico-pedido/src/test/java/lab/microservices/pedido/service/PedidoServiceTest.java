@@ -5,7 +5,7 @@ import lab.microservices.pedido.api.dto.PedidoResponse;
 import lab.microservices.pedido.domain.Pedido;
 import lab.microservices.pedido.domain.StatusPedido;
 import lab.microservices.pedido.events.PedidoEventPublisher;
-import lab.microservices.pedido.repo.PedidoRepository;
+import lab.microservices.pedido.repository.PedidoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

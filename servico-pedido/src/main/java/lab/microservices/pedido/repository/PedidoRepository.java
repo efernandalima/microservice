@@ -1,4 +1,4 @@
-package lab.microservices.pedido.repo;
+package lab.microservices.pedido.repository;
 
 import lab.microservices.pedido.domain.Pedido;
 import lab.microservices.pedido.domain.StatusPedido;

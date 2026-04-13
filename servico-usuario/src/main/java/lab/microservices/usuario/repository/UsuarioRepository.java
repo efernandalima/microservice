@@ -1,4 +1,4 @@
-package lab.microservices.usuario.repo;
+package lab.microservices.usuario.repository;
 
 import lab.microservices.usuario.domain.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
