@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Copia POMs
 COPY pom.xml .
+COPY servico-usuario/pom.xml servico-usuario/
 COPY servico-pedido/pom.xml servico-pedido/
 
 # Download dependencies
