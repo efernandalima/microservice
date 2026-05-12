@@ -51,8 +51,8 @@ services:
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 15s
+      retries: 10
 
   # Elasticsearch - Armazenamento de logs
   elasticsearch:
@@ -145,8 +145,8 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/events
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-ENCRYPTION_KEY_PLACEHOLDER}
-      - JWT_SECRET=${JWT_SECRET:-JWT_SECRET_PLACEHOLDER}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
       - "8081:8081"
     depends_on:
@@ -175,7 +175,7 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/events
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-      - JWT_SECRET=${JWT_SECRET:-JWT_SECRET_PLACEHOLDER}
+      - JWT_SECRET=${JWT_SECRET}
       - SERVICO_USUARIO_URL=http://servico-usuario:8081
     ports:
       - "8082:8082"
