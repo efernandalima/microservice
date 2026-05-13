@@ -33,7 +33,7 @@ public class PedidoController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar pedido por ID", description = "Retorna um pedido específico pelo ID")
-    public ResponseEntity<PedidoResponse> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<PedidoResponse> buscarPorId(@PathVariable("id") Long id) {
         PedidoResponse response = pedidoService.buscarPorId(id);
         return ResponseEntity.ok(response);
     }
@@ -48,7 +48,7 @@ public class PedidoController {
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar pedido", description = "Atualiza os dados de um pedido existente")
     public ResponseEntity<PedidoResponse> atualizar(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody PedidoRequest request) {
         PedidoResponse response = pedidoService.atualizar(id, request);
         return ResponseEntity.ok(response);
@@ -56,7 +56,7 @@ public class PedidoController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar pedido", description = "Remove um pedido do sistema")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> deletar(@PathVariable("id") Long id) {
         pedidoService.deletar(id);
         return ResponseEntity.noContent().build();
     }

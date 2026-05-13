@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # PostgreSQL - Bancos de dados relacionais
   postgres:
@@ -145,6 +143,9 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/events
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces
+      - LOGGING_LOGSTASH_HOST=logstash
+      - LOGGING_LOGSTASH_PORT=5000
       - ENCRYPTION_KEY=${ENCRYPTION_KEY}
       - JWT_SECRET=${JWT_SECRET}
     ports:
@@ -175,6 +176,9 @@ services:
       - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/events
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces
+      - LOGGING_LOGSTASH_HOST=logstash
+      - LOGGING_LOGSTASH_PORT=5000
       - JWT_SECRET=${JWT_SECRET}
       - SERVICO_USUARIO_URL=http://servico-usuario:8081
     ports:

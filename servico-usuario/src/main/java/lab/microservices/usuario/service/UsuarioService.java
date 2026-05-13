@@ -2,6 +2,8 @@ package lab.microservices.usuario.service;
 
 import lab.microservices.usuario.api.dto.UsuarioRequest;
 import lab.microservices.usuario.api.dto.UsuarioResponse;
+import lab.microservices.usuario.api.exception.NotFoundException;
+import lab.microservices.usuario.crypto.HmacService;
 import lab.microservices.usuario.domain.Usuario;
 import lab.microservices.usuario.events.UsuarioEventPublisher;
 import lab.microservices.usuario.repository.UsuarioRepository;
@@ -15,9 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Serviço de negócio para gerenciamento de usuários
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -25,30 +24,31 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final UsuarioEventPublisher eventPublisher;
+    private final HmacService hmacService;
 
     @Transactional
     public UsuarioResponse criar(UsuarioRequest request) {
         log.info("Criando novo usuário: {}", request.getNome());
 
-        // Validações de unicidade
-        if (usuarioRepository.existsByCpf(request.getCpf())) {
+        String cpfHash   = hmacService.hash(request.getCpf());
+        String emailHash = hmacService.hash(request.getEmail());
+
+        if (usuarioRepository.existsByCpfHash(cpfHash)) {
             throw new IllegalArgumentException("CPF já cadastrado");
         }
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
+        if (usuarioRepository.existsByEmailHash(emailHash)) {
             throw new IllegalArgumentException("Email já cadastrado");
         }
 
-        // Cria entidade
         Usuario usuario = new Usuario();
         usuario.setNome(request.getNome());
         usuario.setCpf(request.getCpf());
         usuario.setEmail(request.getEmail());
         usuario.setTelefone(request.getTelefone());
+        usuario.setCpfHash(cpfHash);
+        usuario.setEmailHash(emailHash);
 
-        // Salva
         usuario = usuarioRepository.save(usuario);
-
-        // Publica evento
         eventPublisher.publishCreated(usuario);
 
         log.info("Usuário criado com ID: {}", usuario.getId());
@@ -60,7 +60,7 @@ public class UsuarioService {
     public UsuarioResponse buscarPorId(Long id) {
         log.info("Buscando usuário por ID: {}", id);
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado: " + id));
         return toResponse(usuario);
     }
 
@@ -78,27 +78,28 @@ public class UsuarioService {
         log.info("Atualizando usuário ID: {}", id);
 
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado: " + id));
 
-        // Validações de unicidade (se mudou)
-        if (!usuario.getCpf().equals(request.getCpf()) &&
-                usuarioRepository.existsByCpf(request.getCpf())) {
+        String cpfHash   = hmacService.hash(request.getCpf());
+        String emailHash = hmacService.hash(request.getEmail());
+
+        if (!usuario.getCpfHash().equals(cpfHash) &&
+                usuarioRepository.existsByCpfHash(cpfHash)) {
             throw new IllegalArgumentException("CPF já cadastrado");
         }
-        if (!usuario.getEmail().equals(request.getEmail()) &&
-                usuarioRepository.existsByEmail(request.getEmail())) {
+        if (!usuario.getEmailHash().equals(emailHash) &&
+                usuarioRepository.existsByEmailHash(emailHash)) {
             throw new IllegalArgumentException("Email já cadastrado");
         }
 
-        // Atualiza
         usuario.setNome(request.getNome());
         usuario.setCpf(request.getCpf());
         usuario.setEmail(request.getEmail());
         usuario.setTelefone(request.getTelefone());
+        usuario.setCpfHash(cpfHash);
+        usuario.setEmailHash(emailHash);
 
         usuario = usuarioRepository.save(usuario);
-
-        // Publica evento
         eventPublisher.publishUpdated(usuario);
 
         log.info("Usuário atualizado: {}", id);
@@ -111,12 +112,10 @@ public class UsuarioService {
         log.info("Deletando usuário ID: {}", id);
 
         if (!usuarioRepository.existsById(id)) {
-            throw new IllegalArgumentException("Usuário não encontrado");
+            throw new NotFoundException("Usuário não encontrado: " + id);
         }
 
         usuarioRepository.deleteById(id);
-
-        // Publica evento
         eventPublisher.publishDeleted(id);
 
         log.info("Usuário deletado: {}", id);

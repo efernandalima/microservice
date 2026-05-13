@@ -12,11 +12,11 @@ import java.util.Optional;
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
-    boolean existsByCpf(String cpf);
+    boolean existsByCpfHash(String cpfHash);
 
-    boolean existsByEmail(String email);
+    boolean existsByEmailHash(String emailHash);
 
-    Optional<Usuario> findByCpf(String cpf);
+    Optional<Usuario> findByCpfHash(String cpfHash);
 
-    Optional<Usuario> findByEmail(String email);
+    Optional<Usuario> findByEmailHash(String emailHash);
 }

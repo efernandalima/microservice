@@ -2,6 +2,7 @@ package lab.microservices.pedido.service;
 
 import lab.microservices.pedido.api.dto.PedidoRequest;
 import lab.microservices.pedido.api.dto.PedidoResponse;
+import lab.microservices.pedido.api.exception.NotFoundException;
 import lab.microservices.pedido.domain.Pedido;
 import lab.microservices.pedido.domain.StatusPedido;
 import lab.microservices.pedido.events.PedidoEventPublisher;
@@ -106,8 +107,8 @@ class PedidoServiceTest {
 
         // When/Then
         assertThatThrownBy(() -> pedidoService.buscarPorId(999L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Pedido não encontrado");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Pedido não encontrado");
     }
 
     @Test

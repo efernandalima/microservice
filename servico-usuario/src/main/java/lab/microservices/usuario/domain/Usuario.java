@@ -41,6 +41,12 @@ public class Usuario {
     @Convert(converter = EncryptedStringConverter.class)
     private String telefone;
 
+    @Column(name = "cpf_hash", length = 44)
+    private String cpfHash;
+
+    @Column(name = "email_hash", length = 44)
+    private String emailHash;
+
     @CreatedDate
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;

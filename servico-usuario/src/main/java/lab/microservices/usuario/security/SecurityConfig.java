@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html").permitAll()
                         .requestMatchers("/api-docs/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/usuarios/*/existe").permitAll()
                         // Endpoints protegidos
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session

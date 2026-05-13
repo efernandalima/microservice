@@ -2,6 +2,7 @@ package lab.microservices.pedido.service;
 
 import lab.microservices.pedido.api.dto.PedidoRequest;
 import lab.microservices.pedido.api.dto.PedidoResponse;
+import lab.microservices.pedido.api.exception.NotFoundException;
 import lab.microservices.pedido.client.UsuarioClient;
 import lab.microservices.pedido.domain.Pedido;
 import lab.microservices.pedido.events.PedidoEventPublisher;
@@ -79,7 +80,7 @@ public class PedidoService {
     public PedidoResponse buscarPorId(Long id) {
         log.info("Buscando pedido por ID: {}", id);
         Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Pedido não encontrado: " + id));
         return toResponse(pedido);
     }
 
@@ -97,7 +98,7 @@ public class PedidoService {
         log.info("Atualizando pedido ID: {}", id);
 
         Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Pedido não encontrado: " + id));
 
         // Validação de quantidade
         if (request.getQuantidade() <= 0) {
@@ -126,7 +127,7 @@ public class PedidoService {
         log.info("Deletando pedido ID: {}", id);
 
         if (!pedidoRepository.existsById(id)) {
-            throw new IllegalArgumentException("Pedido não encontrado");
+            throw new NotFoundException("Pedido não encontrado: " + id);
         }
 
         pedidoRepository.deleteById(id);

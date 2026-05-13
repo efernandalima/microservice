@@ -33,7 +33,7 @@ public class UsuarioController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Buscar usuário por ID", description = "Retorna um usuário específico pelo ID")
-    public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable("id") Long id) {
         UsuarioResponse response = usuarioService.buscarPorId(id);
         return ResponseEntity.ok(response);
     }
@@ -48,7 +48,7 @@ public class UsuarioController {
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar usuário", description = "Atualiza os dados de um usuário existente")
     public ResponseEntity<UsuarioResponse> atualizar(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody UsuarioRequest request) {
         UsuarioResponse response = usuarioService.atualizar(id, request);
         return ResponseEntity.ok(response);
@@ -56,7 +56,7 @@ public class UsuarioController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletar usuário", description = "Remove um usuário do sistema")
-    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    public ResponseEntity<Void> deletar(@PathVariable("id") Long id) {
         usuarioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
@@ -68,7 +68,7 @@ public class UsuarioController {
      */
     @GetMapping("/{id}/existe")
     @Operation(summary = "Verificar se usuário existe", description = "Endpoint interno para comunicação entre microsserviços")
-    public ResponseEntity<Boolean> existe(@PathVariable Long id) {
+    public ResponseEntity<Boolean> existe(@PathVariable("id") Long id) {
         boolean existe = usuarioService.existe(id);
         return ResponseEntity.ok(existe);
     }

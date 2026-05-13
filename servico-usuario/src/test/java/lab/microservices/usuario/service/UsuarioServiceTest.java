@@ -2,6 +2,8 @@ package lab.microservices.usuario.service;
 
 import lab.microservices.usuario.api.dto.UsuarioRequest;
 import lab.microservices.usuario.api.dto.UsuarioResponse;
+import lab.microservices.usuario.api.exception.NotFoundException;
+import lab.microservices.usuario.crypto.HmacService;
 import lab.microservices.usuario.domain.Usuario;
 import lab.microservices.usuario.events.UsuarioEventPublisher;
 import lab.microservices.usuario.repository.UsuarioRepository;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,11 +36,17 @@ class UsuarioServiceTest {
     @Mock
     private UsuarioEventPublisher eventPublisher;
 
+    @Mock
+    private HmacService hmacService;
+
     @InjectMocks
     private UsuarioService usuarioService;
 
     private UsuarioRequest validRequest;
     private Usuario usuario;
+
+    private static final String CPF_HASH   = "hash-cpf-teste";
+    private static final String EMAIL_HASH = "hash-email-teste";
 
     @BeforeEach
     void setUp() {
@@ -53,6 +62,8 @@ class UsuarioServiceTest {
         usuario.setCpf("12345678901");
         usuario.setEmail("joao@example.com");
         usuario.setTelefone("11987654321");
+        usuario.setCpfHash(CPF_HASH);
+        usuario.setEmailHash(EMAIL_HASH);
         usuario.setCriadoEm(LocalDateTime.now());
         usuario.setAtualizadoEm(LocalDateTime.now());
     }
@@ -60,15 +71,14 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve criar usuário com sucesso")
     void deveCriarUsuarioComSucesso() {
-        // Given
-        when(usuarioRepository.existsByCpf(validRequest.getCpf())).thenReturn(false);
-        when(usuarioRepository.existsByEmail(validRequest.getEmail())).thenReturn(false);
+        when(hmacService.hash(validRequest.getCpf())).thenReturn(CPF_HASH);
+        when(hmacService.hash(validRequest.getEmail())).thenReturn(EMAIL_HASH);
+        when(usuarioRepository.existsByCpfHash(CPF_HASH)).thenReturn(false);
+        when(usuarioRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(false);
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 
-        // When
         UsuarioResponse response = usuarioService.criar(validRequest);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getNome()).isEqualTo("João da Silva");
@@ -80,10 +90,10 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve lançar exceção quando CPF já existe")
     void deveLancarExcecaoQuandoCpfJaExiste() {
-        // Given
-        when(usuarioRepository.existsByCpf(validRequest.getCpf())).thenReturn(true);
+        when(hmacService.hash(validRequest.getCpf())).thenReturn(CPF_HASH);
+        when(hmacService.hash(validRequest.getEmail())).thenReturn(EMAIL_HASH);
+        when(usuarioRepository.existsByCpfHash(CPF_HASH)).thenReturn(true);
 
-        // When/Then
         assertThatThrownBy(() -> usuarioService.criar(validRequest))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("CPF já cadastrado");
@@ -94,11 +104,11 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve lançar exceção quando email já existe")
     void deveLancarExcecaoQuandoEmailJaExiste() {
-        // Given
-        when(usuarioRepository.existsByCpf(validRequest.getCpf())).thenReturn(false);
-        when(usuarioRepository.existsByEmail(validRequest.getEmail())).thenReturn(true);
+        when(hmacService.hash(validRequest.getCpf())).thenReturn(CPF_HASH);
+        when(hmacService.hash(validRequest.getEmail())).thenReturn(EMAIL_HASH);
+        when(usuarioRepository.existsByCpfHash(CPF_HASH)).thenReturn(false);
+        when(usuarioRepository.existsByEmailHash(EMAIL_HASH)).thenReturn(true);
 
-        // When/Then
         assertThatThrownBy(() -> usuarioService.criar(validRequest))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Email já cadastrado");
@@ -109,49 +119,43 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve buscar usuário por ID com sucesso")
     void deveBuscarUsuarioPorIdComSucesso() {
-        // Given
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
 
-        // When
         UsuarioResponse response = usuarioService.buscarPorId(1L);
 
-        // Then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getNome()).isEqualTo("João da Silva");
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando usuário não encontrado")
-    void deveLancarExcecaoQuandoUsuarioNaoEncontrado() {
-        // Given
+    @DisplayName("Deve lançar NotFoundException quando usuário não encontrado")
+    void deveLancarNotFoundExceptionQuandoUsuarioNaoEncontrado() {
         when(usuarioRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // When/Then
         assertThatThrownBy(() -> usuarioService.buscarPorId(999L))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Usuário não encontrado");
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining("Usuário não encontrado");
     }
 
     @Test
     @DisplayName("Deve listar todos os usuários")
     void deveListarTodosOsUsuarios() {
-        // Given
         Usuario usuario2 = new Usuario();
         usuario2.setId(2L);
         usuario2.setNome("Maria Santos");
         usuario2.setCpf("98765432101");
         usuario2.setEmail("maria@example.com");
         usuario2.setTelefone("11999998888");
+        usuario2.setCpfHash("hash-cpf-2");
+        usuario2.setEmailHash("hash-email-2");
         usuario2.setCriadoEm(LocalDateTime.now());
         usuario2.setAtualizadoEm(LocalDateTime.now());
 
         when(usuarioRepository.findAll()).thenReturn(Arrays.asList(usuario, usuario2));
 
-        // When
         List<UsuarioResponse> usuarios = usuarioService.listarTodos();
 
-        // Then
         assertThat(usuarios).hasSize(2);
         assertThat(usuarios.get(0).getNome()).isEqualTo("João da Silva");
         assertThat(usuarios.get(1).getNome()).isEqualTo("Maria Santos");
@@ -160,8 +164,8 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve atualizar usuário com sucesso")
     void deveAtualizarUsuarioComSucesso() {
-        // Given
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario));
+        when(hmacService.hash(anyString())).thenReturn(CPF_HASH, EMAIL_HASH);
         when(usuarioRepository.save(any(Usuario.class))).thenReturn(usuario);
 
         UsuarioRequest updateRequest = new UsuarioRequest();
@@ -170,10 +174,8 @@ class UsuarioServiceTest {
         updateRequest.setEmail("joao@example.com");
         updateRequest.setTelefone("11999999999");
 
-        // When
         UsuarioResponse response = usuarioService.atualizar(1L, updateRequest);
 
-        // Then
         assertThat(response).isNotNull();
         verify(usuarioRepository).save(any(Usuario.class));
         verify(eventPublisher).publishUpdated(any(Usuario.class));
@@ -182,14 +184,11 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve deletar usuário com sucesso")
     void deveDeletarUsuarioComSucesso() {
-        // Given
         when(usuarioRepository.existsById(1L)).thenReturn(true);
         doNothing().when(usuarioRepository).deleteById(1L);
 
-        // When
         usuarioService.deletar(1L);
 
-        // Then
         verify(usuarioRepository).deleteById(1L);
         verify(eventPublisher).publishDeleted(1L);
     }

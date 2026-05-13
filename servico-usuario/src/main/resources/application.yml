@@ -50,15 +50,15 @@ springdoc:
 
 # Encryption
 encryption:
-  key: ${ENCRYPTION_KEY:ENCRYPTION_KEY_PLACEHOLDER}
+  key: ${ENCRYPTION_KEY:VGhpcyBpcyBhIDMyIGJ5dGUga2V5IGZvciBBRVMyNTY=}
 
-# OpenTelemetry
+# OpenTelemetry — exportação de traces via Micrometer/OTel bridge
 otel:
   service:
     name: servico-usuario
   exporter:
     otlp:
-      endpoint: http://localhost:4318
+      endpoint: http://localhost:4319
   traces:
     exporter: otlp
   metrics:
@@ -66,18 +66,19 @@ otel:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:JWT_SECRET_PLACEHOLDER}
+  secret: "YVd4bVpXNWhaR1Z1ZEdGMWJXVnVkR2x2Ym5OdmIzTmxjM1Z5WlhNPSAg"
   expiration: 86400000  # 24 hours in milliseconds
 
-# Logging
+# Logging (padrão definido em logback-spring.xml — LogstashEncoder JSON)
 logging:
+  logstash:
+    host: localhost
+    port: 5000
   level:
     root: INFO
     lab.microservices: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
-# Actuator
+# Actuator and Tracing
 management:
   endpoints:
     web:
@@ -86,3 +87,9 @@ management:
   endpoint:
     health:
       show-details: always
+  otlp:
+    tracing:
+      endpoint: http://localhost:4319/v1/traces
+  tracing:
+    sampling:
+      probability: 1.0
